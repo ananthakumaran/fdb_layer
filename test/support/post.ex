@@ -1,13 +1,27 @@
 defmodule Sample.Post do
   use FDBLayer.Record
+  alias FDBLayer.{KeyExpression, Index}
+  alias FDB.Coder.ByteString
+  alias FDBLayer.Coder.Proto
 
   @impl true
   def coder do
-    FDBLayer.Coder.Proto.new(Blog.Post)
+    Proto.new(Blog.Post)
   end
 
   @impl true
-  def primary_key do
-    FDBLayer.KeyExpression.field(%{field: :id, coder: FDB.Coder.ByteString.new()})
+  def primary_index do
+    Index.new("posts", :primary, KeyExpression.field(%{field: :id, coder: ByteString.new()}))
+  end
+
+  @impl true
+  def indices do
+    [
+      Index.new(
+        "users_posts",
+        :value,
+        KeyExpression.field(%{field: :user_id, coder: ByteString.new()})
+      )
+    ]
   end
 end
