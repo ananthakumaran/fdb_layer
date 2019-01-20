@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package blog;
+
+message Post {
+  string id = 1;
+  string content = 2;
+  string title = 3;
+  string user_id = 4;
+}
