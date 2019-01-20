@@ -13,10 +13,16 @@ defmodule FDBLayer.Repo do
     Transaction.get(transaction, id, %{coder: record.coder})
   end
 
-  def update() do
+  def update(transaction, mod, value) do
+    record = fetch_record(mod)
+    id = KeyExpression.fetch(record.primary_key, value)
+    :ok = Transaction.set(transaction, id, value, %{coder: record.coder})
   end
 
-  def delete() do
+  def delete(transaction, mod, value) do
+    record = fetch_record(mod)
+    id = KeyExpression.fetch(record.primary_key, value)
+    :ok = Transaction.clear(transaction, id, %{coder: record.coder})
   end
 
   def execute() do

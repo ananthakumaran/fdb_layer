@@ -1,6 +1,7 @@
 defmodule FDBLayer.RecordTest do
   alias FDBLayer.Repo
   alias FDB.Database
+  alias Sample.Post
 
   use ExUnit.Case
 
@@ -12,15 +13,29 @@ defmodule FDBLayer.RecordTest do
     db = TestUtils.new_database()
 
     Database.transact(db, fn t ->
-      Repo.create(t, Sample.Post, %Blog.Post{id: "1234", title: "hello"})
-      Repo.create(t, Sample.Post, %Blog.Post{id: "5678"})
+      Repo.create(t, Post, %Blog.Post{id: "1234", title: "hello"})
+      Repo.create(t, Post, %Blog.Post{id: "5678"})
     end)
 
-    post =
-      Database.transact(db, fn t ->
-        Repo.get(t, Sample.Post, "1234")
-      end)
+    Database.transact(db, fn t ->
+      post = Repo.get(t, Post, "abcd")
+      assert post == nil
 
-    assert post.title == "hello"
+      post = Repo.get(t, Post, "1234")
+      assert post.title == "hello"
+
+      Repo.delete(t, Post, post)
+
+      post = Repo.get(t, Post, "5678")
+      Repo.update(t, Post, %{post | title: "new"})
+    end)
+
+    Database.transact(db, fn t ->
+      post = Repo.get(t, Post, "1234")
+      assert post == nil
+
+      post = Repo.get(t, Post, "5678")
+      assert post.title == "new"
+    end)
   end
 end
