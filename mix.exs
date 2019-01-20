@@ -20,7 +20,10 @@ defmodule FDBLayer.MixProject do
   defp deps do
     [
       {:fdb, "~> 6.0.15-1"},
-      {:msgpax, "~> 2.0"}
+      {:msgpax, "~> 2.0"},
+      {:benchee, "~> 0.13", only: :dev},
+      {:stream_data, "~> 0.4", only: :test},
+      {:jason, "~> 1.0", only: :dev}
     ]
   end
 end

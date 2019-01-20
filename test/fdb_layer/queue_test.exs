@@ -21,8 +21,8 @@ defmodule FDBLayer.QueueTest do
     assert size == 0
 
     Database.transact(db, fn t ->
-      :ok = Queue.enqueue(queue, t, 1, 0)
-      :ok = Queue.enqueue(queue, t, 2, 1)
+      :ok = Queue.enqueue(queue, t, 1, %{order: 0})
+      :ok = Queue.enqueue(queue, t, 2, %{order: 1})
     end)
 
     Database.transact(db, fn t ->

@@ -1,10 +1,11 @@
 defmodule FDBLayer.Queue do
   alias FDB.{Coder, Transaction, Option, KeySelectorRange}
 
-  defstruct [:item_coder, :metadata_coder]
+  defstruct [:item_coder, :metadata_coder, :partitions]
 
   def new(%{subspace: subspace} = opts) do
     coder = Map.get(opts, :coder, FDBLayer.Coder.MsgPack.new())
+    partitions = 0..(Map.get(opts, :partition, 1) - 1)
 
     metadata_coder =
       Transaction.Coder.new(
@@ -19,19 +20,30 @@ defmodule FDBLayer.Queue do
       Transaction.Coder.new(
         Coder.Subspace.concat(
           subspace,
-          Coder.Subspace.new({1, Coder.Integer.new()}, Coder.Versionstamp.new())
+          Coder.Subspace.new(
+            {1, Coder.Integer.new()},
+            Coder.Tuple.new({Coder.Integer.new(), Coder.Versionstamp.new()})
+          )
         ),
         coder
       )
 
-    %__MODULE__{metadata_coder: metadata_coder, item_coder: item_coder}
+    %__MODULE__{metadata_coder: metadata_coder, item_coder: item_coder, partitions: partitions}
   end
 
-  def enqueue(queue, transaction, item, order \\ 0) do
+  def enqueue(queue, transaction, item, opts \\ %{}) do
+    order = Map.get(opts, :order, 0)
+    partition = Map.get(opts, :partition) || Enum.random(queue.partitions)
+
     :ok =
-      Transaction.set_versionstamped_key(transaction, FDB.Versionstamp.incomplete(order), item, %{
-        coder: queue.item_coder
-      })
+      Transaction.set_versionstamped_key(
+        transaction,
+        {partition, FDB.Versionstamp.incomplete(order)},
+        item,
+        %{
+          coder: queue.item_coder
+        }
+      )
 
     :ok =
       Transaction.atomic_op(transaction, "size", Option.mutation_type_add(), 1, %{
@@ -47,11 +59,20 @@ defmodule FDBLayer.Queue do
 
   def dequeue(queue, transaction) do
     result =
-      Transaction.get_range(transaction, KeySelectorRange.starts_with(nil), %{
-        coder: queue.item_coder,
-        limit: 1
-      })
-      |> Enum.to_list()
+      if size(queue, transaction) == 0 do
+        []
+      else
+        Transaction.get_range(
+          transaction,
+          KeySelectorRange.starts_with({Enum.random(queue.partitions)}),
+          %{
+            coder: queue.item_coder,
+            limit: 1,
+            snapshot: true
+          }
+        )
+        |> Enum.to_list()
+      end
 
     case result do
       [] ->
