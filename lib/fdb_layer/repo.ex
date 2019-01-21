@@ -1,11 +1,12 @@
 defmodule FDBLayer.Repo do
   alias FDBLayer.KeyExpression
   alias FDBLayer.Index
+  alias FDBLayer.Index.Primary
 
   def create(transaction, mod, value) do
     record = fetch_record(mod)
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
-    current = Index.fetch_one(record.primary_index, transaction, id)
+    current = Primary.fetch_one(record.primary_index, transaction, id)
 
     if current do
       raise FDBLayer.DuplicateRecordError, """
@@ -19,13 +20,13 @@ defmodule FDBLayer.Repo do
 
   def get(transaction, mod, id) do
     record = fetch_record(mod)
-    Index.fetch_one(record.primary_index, transaction, id)
+    Primary.fetch_one(record.primary_index, transaction, id)
   end
 
   def update(transaction, mod, value) do
     record = fetch_record(mod)
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
-    current = Index.fetch_one(record.primary_index, transaction, id)
+    current = Primary.fetch_one(record.primary_index, transaction, id)
 
     unless current do
       raise FDBLayer.RecordNotFoundError, """
@@ -42,7 +43,7 @@ defmodule FDBLayer.Repo do
   def delete(transaction, mod, value) do
     record = fetch_record(mod)
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
-    current = Index.fetch_one(record.primary_index, transaction, id)
+    current = Primary.fetch_one(record.primary_index, transaction, id)
 
     if current do
       Enum.each([record.primary_index] ++ record.indices, &Index.delete(&1, transaction, current))

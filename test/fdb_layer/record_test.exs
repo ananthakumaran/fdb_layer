@@ -13,8 +13,8 @@ defmodule FDBLayer.RecordTest do
     db = TestUtils.new_database()
 
     Database.transact(db, fn t ->
-      Repo.create(t, Post, %Blog.Post{id: "1234", title: "hello"})
-      Repo.create(t, Post, %Blog.Post{id: "5678"})
+      Repo.create(t, Post, %Blog.Post{id: "1234", title: "hello", user_id: "1"})
+      Repo.create(t, Post, %Blog.Post{id: "5678", user_id: "1"})
     end)
 
     assert_raise FDBLayer.DuplicateRecordError, fn ->

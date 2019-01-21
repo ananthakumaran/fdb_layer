@@ -11,9 +11,8 @@ defmodule Sample.Post do
 
   @impl true
   def primary_index do
-    Index.new(%{
+    Index.Primary.new(%{
       name: "posts",
-      type: :primary,
       key_expression: KeyExpression.field(%{field: :id, coder: ByteString.new()}),
       value_coder: Proto.new(Blog.Post)
     })
@@ -22,13 +21,14 @@ defmodule Sample.Post do
   @impl true
   def indices do
     [
-      Index.new(%{
+      Index.Value.new(%{
         name: "users_posts",
-        type: :value,
-        key_expression: KeyExpression.field(%{field: :user_id, coder: ByteString.new()})
+        key_expression:
+          KeyExpression.concat(
+            KeyExpression.field(%{field: :user_id, coder: ByteString.new()}),
+            KeyExpression.field(%{field: :id, coder: ByteString.new()})
+          )
       })
     ]
-
-    []
   end
 end
