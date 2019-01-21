@@ -17,14 +17,11 @@ defmodule FDBLayer.Record do
     end
   end
 
-  defstruct [:coder, :primary_index, :indices]
+  defstruct [:primary_index, :indices]
 
   def new(impl) do
-    primary_index = impl.primary_index()
-
     %__MODULE__{
-      coder: FDB.Transaction.Coder.new(primary_index.key_expression.coder, impl.coder()),
-      primary_index: primary_index,
+      primary_index: impl.primary_index(),
       indices: impl.indices()
     }
   end

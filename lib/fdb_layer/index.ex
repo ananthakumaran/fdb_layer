@@ -1,16 +1,43 @@
 defmodule FDBLayer.Index do
-  defstruct [:name, :key_expression, :type]
+  alias FDB.Transaction
+  alias FDBLayer.KeyExpression
 
-  def new(name, type, key_expression) do
-    %__MODULE__{name: name, key_expression: key_expression, type: type}
+  @enforce_keys [:name, :key_expression, :type]
+  defstruct [:name, :key_expression, :type, :value_coder, :coder]
+
+  def new(opts) do
+    value_coder = Map.get(opts, :value_coder)
+
+    opts =
+      if value_coder do
+        Map.put(
+          opts,
+          :coder,
+          FDB.Transaction.Coder.new(opts.key_expression.coder, value_coder)
+        )
+      else
+        opts
+      end
+
+    struct!(__MODULE__, opts)
   end
 
-  def create(index, new_record) do
+  def fetch_one(%__MODULE__{type: :primary} = index, transaction, id) do
+    Transaction.get(transaction, id, %{coder: index.coder})
   end
 
-  def update(index, old_record, new_record) do
+  def create(%__MODULE__{type: :primary} = index, transaction, new_record) do
+    id = KeyExpression.fetch(index.key_expression, new_record)
+    :ok = Transaction.set(transaction, id, new_record, %{coder: index.coder})
   end
 
-  def delete(index, current_record) do
+  def update(%__MODULE__{type: :primary} = index, transaction, _old_record, new_record) do
+    id = KeyExpression.fetch(index.key_expression, new_record)
+    :ok = Transaction.set(transaction, id, new_record, %{coder: index.coder})
+  end
+
+  def delete(%__MODULE__{type: :primary} = index, transaction, current_record) do
+    id = KeyExpression.fetch(index.key_expression, current_record)
+    :ok = Transaction.clear(transaction, id, %{coder: index.coder})
   end
 end
