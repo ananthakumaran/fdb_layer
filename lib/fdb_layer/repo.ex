@@ -2,9 +2,10 @@ defmodule FDBLayer.Repo do
   alias FDBLayer.KeyExpression
   alias FDBLayer.Index
   alias FDBLayer.Index.Primary
+  alias FDBLayer.Record
 
   def create(transaction, mod, value) do
-    record = fetch_record(mod)
+    record = Record.fetch(mod)
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
     current = Primary.fetch_one(record.primary_index, transaction, id)
 
@@ -19,12 +20,12 @@ defmodule FDBLayer.Repo do
   end
 
   def get(transaction, mod, id) do
-    record = fetch_record(mod)
+    record = Record.fetch(mod)
     Primary.fetch_one(record.primary_index, transaction, id)
   end
 
   def update(transaction, mod, value) do
-    record = fetch_record(mod)
+    record = Record.fetch(mod)
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
     current = Primary.fetch_one(record.primary_index, transaction, id)
 
@@ -41,7 +42,7 @@ defmodule FDBLayer.Repo do
   end
 
   def delete(transaction, mod, value) do
-    record = fetch_record(mod)
+    record = Record.fetch(mod)
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
     current = Primary.fetch_one(record.primary_index, transaction, id)
 
@@ -54,18 +55,5 @@ defmodule FDBLayer.Repo do
   end
 
   def execute() do
-  end
-
-  defp fetch_record(mod) do
-    key = {__MODULE__, mod}
-
-    try do
-      :persistent_term.get(key)
-    rescue
-      ArgumentError ->
-        record = FDBLayer.Record.new(mod)
-        :ok = :persistent_term.put(key, FDBLayer.Record.new(mod))
-        record
-    end
   end
 end

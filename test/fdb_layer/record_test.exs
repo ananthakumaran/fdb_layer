@@ -1,7 +1,9 @@
 defmodule FDBLayer.RecordTest do
   alias FDBLayer.Repo
+  alias FDBLayer.Index
   alias FDB.Database
   alias Sample.Post
+  alias FDB.KeySelectorRange
 
   use ExUnit.Case
 
@@ -13,8 +15,8 @@ defmodule FDBLayer.RecordTest do
     db = TestUtils.new_database()
 
     Database.transact(db, fn t ->
-      Repo.create(t, Post, %Blog.Post{id: "1234", title: "hello", user_id: "1"})
-      Repo.create(t, Post, %Blog.Post{id: "5678", user_id: "1"})
+      Repo.create(t, Post, %Blog.Post{id: "1234", title: "hello", user_id: "8"})
+      Repo.create(t, Post, %Blog.Post{id: "5678", user_id: "8"})
     end)
 
     assert_raise FDBLayer.DuplicateRecordError, fn ->
@@ -22,6 +24,12 @@ defmodule FDBLayer.RecordTest do
         Repo.create(t, Post, %Blog.Post{id: "1234"})
       end)
     end
+
+    posts =
+      Index.scan(Post.index("users_posts"), db, KeySelectorRange.starts_with({"8"}))
+      |> Enum.to_list()
+
+    assert posts == [{"8", "1234"}, {"8", "5678"}]
 
     Database.transact(db, fn t ->
       post = Repo.get(t, Post, "abcd")

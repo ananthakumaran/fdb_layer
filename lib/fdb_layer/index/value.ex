@@ -14,7 +14,7 @@ defmodule FDBLayer.Index.Value do
   end
 end
 
-defimpl FDBLayer.Index, for: FDBLayer.Index.Value do
+defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Value do
   alias FDB.Transaction
   alias FDBLayer.KeyExpression
 
@@ -38,5 +38,10 @@ defimpl FDBLayer.Index, for: FDBLayer.Index.Value do
   def delete(index, transaction, current_record) do
     id = KeyExpression.fetch(index.key_expression, current_record)
     :ok = Transaction.clear(transaction, id, %{coder: index.coder})
+  end
+
+  def scan(index, database_or_transaction, key_selector_range) do
+    Transaction.get_range(database_or_transaction, key_selector_range, %{coder: index.coder})
+    |> Stream.map(fn {key, ""} -> key end)
   end
 end
