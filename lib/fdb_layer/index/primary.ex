@@ -17,7 +17,12 @@ defmodule FDBLayer.Index.Primary do
   end
 
   def fetch_one(index, transaction, id) do
-    Transaction.get(transaction, id, %{coder: index.coder})
+    fetch_one_q(index, transaction, id)
+    |> FDB.Future.await()
+  end
+
+  def fetch_one_q(index, transaction, id) do
+    Transaction.get_q(transaction, id, %{coder: index.coder})
   end
 end
 

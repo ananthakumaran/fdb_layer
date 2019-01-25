@@ -20,8 +20,13 @@ defmodule FDBLayer.Repo do
   end
 
   def get(transaction, mod, id) do
+    get_q(transaction, mod, id)
+    |> FDB.Future.await()
+  end
+
+  def get_q(transaction, mod, id) do
     record = Record.fetch(mod)
-    Primary.fetch_one(record.primary_index, transaction, id)
+    Primary.fetch_one_q(record.primary_index, transaction, id)
   end
 
   def update(transaction, mod, value) do
