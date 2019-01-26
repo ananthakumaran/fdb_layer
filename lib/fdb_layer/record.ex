@@ -1,4 +1,6 @@
 defmodule FDBLayer.Record do
+  alias FDBLayer.Index
+
   @moduledoc """
   Refer modules named FDB.Coder.* for sample implementation.
   """
@@ -13,20 +15,20 @@ defmodule FDBLayer.Record do
       @impl true
       def indices(), do: []
 
-      def index(name) do
-        record = FDBLayer.Record.fetch(__MODULE__)
-        record.indices_by_name[name]
-      end
-
       defoverridable FDBLayer.Record
     end
   end
 
   defstruct [:primary_index, :indices, :indices_by_name]
 
-  def new(impl) do
-    primary_index = impl.primary_index()
-    indices = impl.indices()
+  def new(transaction, root_directory, impl) do
+    primary_index =
+      impl.primary_index()
+      |> Index.init(transaction, root_directory)
+
+    indices =
+      impl.indices()
+      |> Enum.map(&Index.init(&1, transaction, root_directory))
 
     %__MODULE__{
       primary_index: primary_index,
@@ -37,18 +39,5 @@ defmodule FDBLayer.Record do
         end)
         |> Enum.into(%{})
     }
-  end
-
-  def fetch(mod) do
-    key = {__MODULE__, mod}
-
-    try do
-      :persistent_term.get(key)
-    rescue
-      ArgumentError ->
-        record = FDBLayer.Record.new(mod)
-        :ok = :persistent_term.put(key, FDBLayer.Record.new(mod))
-        record
-    end
   end
 end

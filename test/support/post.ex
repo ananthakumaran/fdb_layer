@@ -12,6 +12,7 @@ defmodule Sample.Post do
   @impl true
   def primary_index do
     Index.Primary.new(%{
+      path: ["record", "posts"],
       name: "posts",
       key_expression: KeyExpression.field(%{field: :id, coder: ByteString.new()}),
       value_coder: Proto.new(Blog.Post)
@@ -23,6 +24,7 @@ defmodule Sample.Post do
     [
       Index.Value.new(%{
         name: "users_posts",
+        path: ["index", "posts", "user_id"],
         key_expression:
           KeyExpression.concat(
             KeyExpression.field(%{field: :user_id, coder: ByteString.new()}),

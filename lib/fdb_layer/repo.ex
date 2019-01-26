@@ -2,10 +2,8 @@ defmodule FDBLayer.Repo do
   alias FDBLayer.KeyExpression
   alias FDBLayer.Index
   alias FDBLayer.Index.Primary
-  alias FDBLayer.Record
 
-  def create(transaction, mod, value) do
-    record = Record.fetch(mod)
+  def create(transaction, record, value) do
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
     current = Primary.fetch_one(record.primary_index, transaction, id)
 
@@ -19,18 +17,16 @@ defmodule FDBLayer.Repo do
     Enum.each([record.primary_index] ++ record.indices, &Index.create(&1, transaction, value))
   end
 
-  def get(transaction, mod, id) do
-    get_q(transaction, mod, id)
+  def get(transaction, record, id) do
+    get_q(transaction, record, id)
     |> FDB.Future.await()
   end
 
-  def get_q(transaction, mod, id) do
-    record = Record.fetch(mod)
+  def get_q(transaction, record, id) do
     Primary.fetch_one_q(record.primary_index, transaction, id)
   end
 
-  def update(transaction, mod, value) do
-    record = Record.fetch(mod)
+  def update(transaction, record, value) do
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
     current = Primary.fetch_one(record.primary_index, transaction, id)
 
@@ -46,8 +42,7 @@ defmodule FDBLayer.Repo do
     )
   end
 
-  def delete(transaction, mod, value) do
-    record = Record.fetch(mod)
+  def delete(transaction, record, value) do
     id = KeyExpression.fetch(record.primary_index.key_expression, value)
     current = Primary.fetch_one(record.primary_index, transaction, id)
 

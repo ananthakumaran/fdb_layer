@@ -1,6 +1,6 @@
 defmodule FDBLayer.Index.Value do
   @enforce_keys [:name, :key_expression]
-  defstruct [:name, :key_expression, :coder]
+  defstruct [:name, :path, :key_expression, :coder]
 
   def new(opts) do
     opts =
@@ -17,6 +17,12 @@ end
 defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Value do
   alias FDB.Transaction
   alias FDBLayer.KeyExpression
+
+  def init(index, transaction, root_directory) do
+    directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
+    coder = Map.update!(index.coder, :key, &FDB.Coder.Subspace.new(directory, &1))
+    %{index | coder: coder}
+  end
 
   def create(index, transaction, new_record) do
     id = KeyExpression.fetch(index.key_expression, new_record)
