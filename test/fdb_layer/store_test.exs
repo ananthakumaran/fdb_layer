@@ -25,8 +25,11 @@ defmodule FDBLayer.StoreTest do
     Database.transact(db, fn t ->
       assert TestUtils.tree(root, t) == %{
                "blog" => %{
-                 "index" => %{"posts" => %{"user_id" => %{}}},
-                 "record" => %{"posts" => %{}}
+                 "record" => %{"posts" => %{}},
+                 "index" => %{
+                   "posts" => %{"count" => %{}},
+                   "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                 }
                }
              }
     end)
@@ -51,12 +54,18 @@ defmodule FDBLayer.StoreTest do
       assert TestUtils.tree(root, t) == %{
                "user" => %{
                  "1" => %{
-                   "index" => %{"posts" => %{"user_id" => %{}}},
-                   "record" => %{"posts" => %{}}
+                   "record" => %{"posts" => %{}},
+                   "index" => %{
+                     "posts" => %{"count" => %{}},
+                     "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                   }
                  },
                  "2" => %{
-                   "index" => %{"posts" => %{"user_id" => %{}}},
-                   "record" => %{"posts" => %{}}
+                   "record" => %{"posts" => %{}},
+                   "index" => %{
+                     "posts" => %{"count" => %{}},
+                     "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                   }
                  }
                }
              }
@@ -104,7 +113,10 @@ defmodule FDBLayer.StoreTest do
       assert TestUtils.tree(root, t) == %{
                "user" => %{
                  "2" => %{
-                   "index" => %{"posts" => %{"user_id" => %{}}},
+                   "index" => %{
+                     "posts" => %{"count" => %{}},
+                     "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                   },
                    "record" => %{"posts" => %{}}
                  }
                }

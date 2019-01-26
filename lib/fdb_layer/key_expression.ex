@@ -1,6 +1,10 @@
 defmodule FDBLayer.KeyExpression do
   defstruct [:path, :coder]
 
+  def empty() do
+    %__MODULE__{path: [], coder: FDB.Coder.ByteString.new()}
+  end
+
   def field(opts) do
     %__MODULE__{path: [Access.key(opts.field)], coder: opts.coder}
   end
@@ -13,6 +17,10 @@ defmodule FDBLayer.KeyExpression do
     end
 
     %__MODULE__{path: [concat], coder: FDB.Coder.Tuple.new({a.coder, b.coder})}
+  end
+
+  def fetch(%__MODULE__{path: []}, _value) do
+    ""
   end
 
   def fetch(%__MODULE__{path: path}, value) do

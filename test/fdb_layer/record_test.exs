@@ -24,7 +24,8 @@ defmodule FDBLayer.RecordTest do
 
     Database.transact(db, fn t ->
       Repo.create(t, post_record, %Blog.Post{id: "1234", title: "hello", user_id: "8"})
-      Repo.create(t, post_record, %Blog.Post{id: "5678", user_id: "8"})
+      Repo.create(t, post_record, %Blog.Post{id: "5678", user_id: "9"})
+      Repo.create(t, post_record, %Blog.Post{id: "5679", user_id: "9"})
     end)
 
     assert_raise FDBLayer.DuplicateRecordError, fn ->
@@ -34,10 +35,16 @@ defmodule FDBLayer.RecordTest do
     end
 
     posts =
-      Index.scan(Store.index(store, Post, "users_posts"), db, KeySelectorRange.starts_with({"8"}))
+      Index.scan(Store.index(store, Post, "users_posts"), db, KeySelectorRange.starts_with({"9"}))
       |> Enum.to_list()
 
-    assert posts == [{"8", "1234"}, {"8", "5678"}]
+    assert posts == [{"9", "5678"}, {"9", "5679"}]
+
+    Database.transact(db, fn t ->
+      assert Index.Aggregate.fetch_one(Store.index(store, Post, "posts_count"), t) == 3
+      assert Index.Aggregate.fetch_one(Store.index(store, Post, "users_posts_count"), t, "8") == 1
+      assert Index.Aggregate.fetch_one(Store.index(store, Post, "users_posts_count"), t, "9") == 2
+    end)
 
     Database.transact(db, fn t ->
       post = Repo.get(t, post_record, "abcd")
@@ -50,6 +57,12 @@ defmodule FDBLayer.RecordTest do
 
       post = Repo.get(t, post_record, "5678")
       Repo.update(t, post_record, %{post | title: "new"})
+    end)
+
+    Database.transact(db, fn t ->
+      assert Index.Aggregate.fetch_one(Store.index(store, Post, "posts_count"), t) == 2
+      assert Index.Aggregate.fetch_one(Store.index(store, Post, "users_posts_count"), t, "8") == 0
+      assert Index.Aggregate.fetch_one(Store.index(store, Post, "users_posts_count"), t, "9") == 2
     end)
 
     Database.transact(db, fn t ->
