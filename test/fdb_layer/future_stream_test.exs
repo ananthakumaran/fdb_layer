@@ -7,7 +7,7 @@ defmodule FDBLayer.StreamTest do
   alias FDB.KeySelectorRange
   alias FDBLayer.Store
 
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   setup do
     TestUtils.flushdb()

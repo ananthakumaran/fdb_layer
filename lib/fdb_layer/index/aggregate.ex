@@ -14,9 +14,11 @@ defmodule FDBLayer.Index.Aggregate do
     struct!(__MODULE__, opts)
   end
 
-  def fetch_one(index, transaction, key \\ "") do
+  def fetch_one(index, transaction, key \\ "", opts \\ %{}) do
+    default = Map.get(opts, :default, 0)
+
     fetch_one_q(index, transaction, key)
-    |> FDB.Future.await()
+    |> FDB.Future.await() || default
   end
 
   def fetch_one_q(index, transaction, key \\ "") do

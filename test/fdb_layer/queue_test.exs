@@ -3,7 +3,7 @@ defmodule FDBLayer.QueueTest do
   alias FDB.Coder
   alias FDB.Database
 
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   setup do
     TestUtils.flushdb()

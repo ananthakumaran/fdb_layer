@@ -7,7 +7,7 @@ defmodule FDBLayer.StoreTest do
   alias FDBLayer.Repo
   alias FDBLayer.Index
 
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   setup do
     TestUtils.flushdb()
