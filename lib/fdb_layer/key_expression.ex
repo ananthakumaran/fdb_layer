@@ -5,8 +5,8 @@ defmodule FDBLayer.KeyExpression do
     %__MODULE__{path: [], coder: FDB.Coder.ByteString.new()}
   end
 
-  def field(opts) do
-    %__MODULE__{path: [Access.key(opts.field)], coder: opts.coder}
+  def field(name, opts \\ %{}) do
+    %__MODULE__{path: [Access.key(name)], coder: Map.get(opts, :coder)}
   end
 
   def concat(a, b) do

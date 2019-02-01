@@ -7,4 +7,5 @@ message Post {
   string content = 2;
   string title = 3;
   string user_id = 4;
+  int32 claps = 5;
 }

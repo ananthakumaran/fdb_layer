@@ -18,13 +18,17 @@ defmodule FDBLayer.PropertyTest do
               %Blog.Post{id: "post_#{i}", user_id: "user_#{Integer.mod(i, 10) + 1}"}
             end)
 
+  def gen_record() do
+    map({member_of(@records), string(:ascii), integer(), integer(1..10)}, fn {record, content,
+                                                                              claps, user_id} ->
+      %{record | content: content, claps: claps, user_id: "user_#{user_id}"}
+    end)
+  end
+
   def gen_command() do
     one_of([
-      {:create, member_of(@records)},
-      {:update,
-       map({member_of(@records), string(:ascii)}, fn {record, content} ->
-         %{record | content: content}
-       end)},
+      {:create, gen_record()},
+      {:update, gen_record()},
       {:delete, member_of(@records)}
     ])
   end
@@ -102,6 +106,27 @@ defmodule FDBLayer.PropertyTest do
     assert actual == expected
   end
 
+  def verify_user_claps_index(db, store) do
+    actual =
+      Index.scan(
+        Store.index(store, Post, "users_claps_sum"),
+        db,
+        KeySelectorRange.starts_with(nil)
+      )
+      |> Enum.to_list()
+
+    expected =
+      Index.scan(Store.index(store, Post, "posts"), db, KeySelectorRange.starts_with(nil))
+      |> Enum.map(fn {_id, record} ->
+        {record.user_id, record.claps}
+      end)
+      |> Enum.group_by(fn {user_id, _claps} -> user_id end, fn {_user_id, claps} -> claps end)
+      |> Enum.map(fn {user_id, claps} -> {user_id, Enum.sum(claps)} end)
+      |> Enum.sort()
+
+    assert actual == expected
+  end
+
   property "consistency" do
     db = TestUtils.new_database()
 
@@ -115,6 +140,7 @@ defmodule FDBLayer.PropertyTest do
       verify_value_index(db, store)
       verify_global_count_index(db, store)
       verify_user_count_index(db, store)
+      verify_user_claps_index(db, store)
     end
   end
 end

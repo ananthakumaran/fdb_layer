@@ -1,4 +1,8 @@
 defmodule FDBLayer.Index.Aggregate.Count do
+  def default() do
+    0
+  end
+
   def coder() do
     FDB.Coder.LittleEndianInteger.new()
   end

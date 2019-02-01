@@ -28,7 +28,7 @@ defmodule FDBLayer.StoreTest do
                  "record" => %{"posts" => %{}},
                  "index" => %{
                    "posts" => %{"count" => %{}},
-                   "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                   "users" => %{"post_id" => %{}, "posts_count" => %{}, "claps_sum" => %{}}
                  }
                }
              }
@@ -57,14 +57,14 @@ defmodule FDBLayer.StoreTest do
                    "record" => %{"posts" => %{}},
                    "index" => %{
                      "posts" => %{"count" => %{}},
-                     "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                     "users" => %{"post_id" => %{}, "posts_count" => %{}, "claps_sum" => %{}}
                    }
                  },
                  "2" => %{
                    "record" => %{"posts" => %{}},
                    "index" => %{
                      "posts" => %{"count" => %{}},
-                     "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                     "users" => %{"post_id" => %{}, "posts_count" => %{}, "claps_sum" => %{}}
                    }
                  }
                }
@@ -115,7 +115,7 @@ defmodule FDBLayer.StoreTest do
                  "2" => %{
                    "index" => %{
                      "posts" => %{"count" => %{}},
-                     "users" => %{"post_id" => %{}, "posts_count" => %{}}
+                     "users" => %{"post_id" => %{}, "posts_count" => %{}, "claps_sum" => %{}}
                    },
                    "record" => %{"posts" => %{}}
                  }

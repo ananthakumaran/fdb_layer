@@ -24,7 +24,7 @@ defmodule FDBLayer.MixProject do
 
   defp deps do
     [
-      {:fdb, "~> 6.0.15-1"},
+      {:fdb, path: "../fdb"},
       {:msgpax, "~> 2.0"},
       {:protox, "~> 0.17.0"},
       {:benchee, "~> 0.13", only: :dev},
