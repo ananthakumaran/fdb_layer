@@ -76,7 +76,9 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
   end
 
   def scan(index, database_or_transaction, key_selector_range) do
-    Transaction.get_range(database_or_transaction, key_selector_range, %{coder: index.coder})
+    Transaction.get_range_stream(database_or_transaction, key_selector_range, %{
+      coder: index.coder
+    })
   end
 
   defp atomic(nil, _, _, _) do

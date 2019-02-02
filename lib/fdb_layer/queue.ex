@@ -62,7 +62,7 @@ defmodule FDBLayer.Queue do
       if size(queue, transaction) == 0 do
         []
       else
-        Transaction.get_range(
+        Transaction.get_range_stream(
           transaction,
           KeySelectorRange.starts_with({Enum.random(queue.partitions)}),
           %{
