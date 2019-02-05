@@ -3,11 +3,7 @@ defmodule Sample.Post do
   alias FDBLayer.{KeyExpression, Index}
   alias FDB.Coder.ByteString
   alias FDBLayer.Coder.Proto
-
-  @impl true
-  def coder do
-    Proto.new(Blog.Post)
-  end
+  use Protobuf, from: Path.join(__DIR__, "blog.proto"), only: [:Post], inject: true
 
   @impl true
   def primary_index do
@@ -15,7 +11,7 @@ defmodule Sample.Post do
       path: ["record", "posts"],
       name: "posts",
       key_expression: KeyExpression.field(:id, %{coder: ByteString.new()}),
-      value_coder: Proto.new(Blog.Post)
+      value_coder: Proto.new(__MODULE__)
     })
   end
 

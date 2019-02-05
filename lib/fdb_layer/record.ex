@@ -4,7 +4,6 @@ defmodule FDBLayer.Record do
   @moduledoc """
   Refer modules named FDB.Coder.* for sample implementation.
   """
-  @callback coder() :: FDB.Coder.t()
   @callback primary_index() :: FDBLayer.Index.t()
   @callback indices() :: [FDBLayer.Index.t()]
 

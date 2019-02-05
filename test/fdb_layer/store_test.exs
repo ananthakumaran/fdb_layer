@@ -72,13 +72,14 @@ defmodule FDBLayer.StoreTest do
     end)
 
     Database.transact(db, fn t ->
-      Repo.create(t, Store.record(user_1, Post), %Blog.Post{
+      Repo.create(t, Store.record(user_1, Post), %Post{
         id: "1234",
         title: "hello",
-        user_id: "1"
+        user_id: "1",
+        claps: 0
       })
 
-      Repo.create(t, Store.record(user_2, Post), %Blog.Post{id: "5678", user_id: "2"})
+      Repo.create(t, Store.record(user_2, Post), %Post{id: "5678", user_id: "2", claps: 0})
     end)
 
     posts =

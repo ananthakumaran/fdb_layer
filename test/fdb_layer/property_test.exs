@@ -15,7 +15,7 @@ defmodule FDBLayer.PropertyTest do
 
   @record_count 1000
   @records (for i <- 1..@record_count do
-              %Blog.Post{id: "post_#{i}", user_id: "user_#{Integer.mod(i, 10) + 1}"}
+              %Post{id: "post_#{i}", user_id: "user_#{Integer.mod(i, 10) + 1}"}
             end)
 
   def gen_record() do

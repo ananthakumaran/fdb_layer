@@ -26,10 +26,11 @@ defmodule FDBLayer.StreamTest do
     |> Stream.each(fn chunk ->
       Database.transact(db, fn t ->
         Enum.each(chunk, fn i ->
-          Repo.create(t, Store.record(store, Post), %Blog.Post{
+          Repo.create(t, Store.record(store, Post), %Post{
             id: "post_#{i}",
             title: "hello",
-            user_id: "user_#{i}"
+            user_id: "user_#{i}",
+            claps: 0
           })
         end)
       end)

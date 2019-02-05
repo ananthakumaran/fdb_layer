@@ -23,14 +23,14 @@ defmodule FDBLayer.RecordTest do
     post_record = Store.record(store, Post)
 
     Database.transact(db, fn t ->
-      Repo.create(t, post_record, %Blog.Post{id: "1234", title: "hello", user_id: "8"})
-      Repo.create(t, post_record, %Blog.Post{id: "5678", user_id: "9"})
-      Repo.create(t, post_record, %Blog.Post{id: "5679", user_id: "9"})
+      Repo.create(t, post_record, %Post{id: "1234", title: "hello", user_id: "8", claps: 0})
+      Repo.create(t, post_record, %Post{id: "5678", user_id: "9", claps: 0})
+      Repo.create(t, post_record, %Post{id: "5679", user_id: "9", claps: 0})
     end)
 
     assert_raise FDBLayer.DuplicateRecordError, fn ->
       Database.transact(db, fn t ->
-        Repo.create(t, post_record, %Blog.Post{id: "1234"})
+        Repo.create(t, post_record, %Post{id: "1234"})
       end)
     end
 
