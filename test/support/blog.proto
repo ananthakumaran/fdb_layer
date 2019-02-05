@@ -2,10 +2,22 @@ syntax = "proto3";
 
 package blog;
 
+message User {
+  string id = 1;
+  string name = 2;
+}
+
+message Comment {
+  string id = 1;
+  string content = 2;
+  string user_id = 3;
+}
+
 message Post {
   string id = 1;
   string content = 2;
   string title = 3;
   string user_id = 4;
   int32 claps = 5;
+  repeated Comment comments = 6;
 }

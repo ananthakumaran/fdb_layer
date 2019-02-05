@@ -93,6 +93,7 @@ defmodule FDBLayer.PropertyTest do
         KeySelectorRange.starts_with(nil)
       )
       |> Enum.to_list()
+      |> Enum.filter(fn {_user_id, count} -> count != 0 end)
 
     expected =
       Index.scan(Store.index(store, Post, "posts"), db, KeySelectorRange.starts_with(nil))
@@ -101,6 +102,7 @@ defmodule FDBLayer.PropertyTest do
       end)
       |> Enum.group_by(fn {user_id, _id} -> user_id end)
       |> Enum.map(fn {user_id, values} -> {user_id, Enum.count(values)} end)
+      |> Enum.filter(fn {_user_id, count} -> count != 0 end)
       |> Enum.sort()
 
     assert actual == expected
@@ -114,6 +116,7 @@ defmodule FDBLayer.PropertyTest do
         KeySelectorRange.starts_with(nil)
       )
       |> Enum.to_list()
+      |> Enum.filter(fn {_user_id, count} -> count != 0 end)
 
     expected =
       Index.scan(Store.index(store, Post, "posts"), db, KeySelectorRange.starts_with(nil))
@@ -122,6 +125,7 @@ defmodule FDBLayer.PropertyTest do
       end)
       |> Enum.group_by(fn {user_id, _claps} -> user_id end, fn {_user_id, claps} -> claps end)
       |> Enum.map(fn {user_id, claps} -> {user_id, Enum.sum(claps)} end)
+      |> Enum.filter(fn {_user_id, count} -> count != 0 end)
       |> Enum.sort()
 
     assert actual == expected

@@ -3,6 +3,7 @@ defmodule FDBLayer.RecordTest do
   alias FDBLayer.Index
   alias FDB.Database
   alias Sample.Post
+  alias Sample.User
   alias FDB.KeySelectorRange
   alias FDBLayer.Store
 
@@ -17,10 +18,11 @@ defmodule FDBLayer.RecordTest do
 
     store =
       Database.transact(db, fn t ->
-        Store.create(t, %{records: [Post], path: ["blog"]})
+        Store.create(t, %{records: [Post, User], path: ["blog"]})
       end)
 
     post_record = Store.record(store, Post)
+    user_record = Store.record(store, User)
 
     Database.transact(db, fn t ->
       Repo.create(t, post_record, %Post{id: "1234", title: "hello", user_id: "8", claps: 0})
@@ -71,6 +73,19 @@ defmodule FDBLayer.RecordTest do
 
       post = Repo.get(t, post_record, "5678")
       assert post.title == "new"
+    end)
+
+    Database.transact(db, fn t ->
+      Repo.create(t, user_record, %User{id: "1", name: "john"})
+      Repo.create(t, user_record, %User{id: "2", name: "wick"})
+    end)
+
+    Database.transact(db, fn t ->
+      user = Repo.get(t, user_record, "1")
+      assert user.name == "john"
+
+      user = Repo.get(t, user_record, "2")
+      assert user.name == "wick"
     end)
   end
 end
