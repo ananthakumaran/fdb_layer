@@ -21,6 +21,7 @@ end
 defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
   alias FDB.Transaction
   alias FDBLayer.Projection
+  alias FDBLayer.Changeset
 
   def init(index, transaction, root_directory) do
     directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
@@ -29,33 +30,44 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
   end
 
   def create(index, transaction, new_record) do
-    [{key, value}] = Projection.apply(index.projection, new_record)
+    Projection.apply(index.projection, new_record)
+    |> Enum.each(fn {key, value} ->
+      index.type.create(value)
+      |> atomic(index, transaction, key)
+    end)
 
-    index.type.create(value)
-    |> atomic(index, transaction, key)
+    :ok
   end
 
   def update(index, transaction, old_record, new_record) do
-    [{new_key, new_value}] = Projection.apply(index.projection, new_record)
-    [{old_key, old_value}] = Projection.apply(index.projection, old_record)
+    new = Projection.apply(index.projection, new_record)
+    old = Projection.apply(index.projection, old_record)
+    changeset = Changeset.construct(old, new)
 
-    if new_key == old_key do
+    Enum.each(changeset.created, fn {key, value} ->
+      index.type.create(value)
+      |> atomic(index, transaction, key)
+    end)
+
+    Enum.each(changeset.updated, fn {key, old_value, new_value} ->
       index.type.update(old_value, new_value)
-      |> atomic(index, transaction, new_key)
-    else
-      index.type.delete(old_value)
-      |> atomic(index, transaction, old_key)
+      |> atomic(index, transaction, key)
+    end)
 
-      index.type.create(new_value)
-      |> atomic(index, transaction, new_key)
-    end
+    Enum.each(changeset.deleted, fn {key, value} ->
+      index.type.delete(value)
+      |> atomic(index, transaction, key)
+    end)
   end
 
   def delete(index, transaction, current_record) do
-    [{key, value}] = Projection.apply(index.projection, current_record)
+    Projection.apply(index.projection, current_record)
+    |> Enum.each(fn {key, value} ->
+      index.type.delete(value)
+      |> atomic(index, transaction, key)
+    end)
 
-    index.type.delete(value)
-    |> atomic(index, transaction, key)
+    :ok
   end
 
   def scan(index, database_or_transaction, key_selector_range) do
