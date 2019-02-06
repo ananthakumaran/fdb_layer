@@ -1,18 +1,9 @@
 defmodule FDBLayer.Index.Primary do
   alias FDB.Transaction
-  @enforce_keys [:name, :key_expression, :value_coder]
-  defstruct [:name, :path, :key_expression, :value_coder, :coder]
+  @enforce_keys [:name, :coder, :path, :projection]
+  defstruct [:name, :coder, :path, :projection]
 
   def new(opts) do
-    value_coder = Map.fetch!(opts, :value_coder)
-
-    opts =
-      Map.put(
-        opts,
-        :coder,
-        FDB.Transaction.Coder.new(opts.key_expression.coder, value_coder)
-      )
-
     struct!(__MODULE__, opts)
   end
 
@@ -28,7 +19,8 @@ end
 
 defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Primary do
   alias FDB.Transaction
-  alias FDBLayer.KeyExpression
+  alias FDBLayer.Projection
+  alias FDBLayer.Index.Primary
 
   def init(index, transaction, root_directory) do
     directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
@@ -37,18 +29,27 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Primary do
   end
 
   def create(index, transaction, new_record) do
-    id = KeyExpression.fetch(index.key_expression, new_record)
-    :ok = Transaction.set(transaction, id, new_record, %{coder: index.coder})
+    [{key, value}] = Projection.apply(index.projection, new_record)
+    current = Primary.fetch_one(index, transaction, key)
+
+    if current do
+      raise FDBLayer.DuplicateRecordError, """
+      A record with primary key `#{key}` already exists.
+      Existing Record: #{inspect(current)}
+      """
+    end
+
+    :ok = Transaction.set(transaction, key, value, %{coder: index.coder})
   end
 
   def update(index, transaction, _old_record, new_record) do
-    id = KeyExpression.fetch(index.key_expression, new_record)
-    :ok = Transaction.set(transaction, id, new_record, %{coder: index.coder})
+    [{key, value}] = Projection.apply(index.projection, new_record)
+    :ok = Transaction.set(transaction, key, value, %{coder: index.coder})
   end
 
   def delete(index, transaction, current_record) do
-    id = KeyExpression.fetch(index.key_expression, current_record)
-    :ok = Transaction.clear(transaction, id, %{coder: index.coder})
+    [{key, _}] = Projection.apply(index.projection, current_record)
+    :ok = Transaction.clear(transaction, key, %{coder: index.coder})
   end
 
   def scan(index, database_or_transaction, key_selector_range) do

@@ -1,8 +1,9 @@
 defmodule Sample.User do
   use FDBLayer.Record
-  alias FDBLayer.{KeyExpression, Index}
+  alias FDBLayer.{Projection, Index}
   alias FDB.Coder.ByteString
   alias FDBLayer.Coder.Proto
+  alias FDB.Transaction
   use Protobuf, from: Path.join(__DIR__, "blog.proto"), only: [:User], inject: true
 
   @impl true
@@ -10,8 +11,8 @@ defmodule Sample.User do
     Index.Primary.new(%{
       path: ["record", "users"],
       name: "users",
-      key_expression: KeyExpression.field(:id, %{coder: ByteString.new()}),
-      value_coder: Proto.new(__MODULE__)
+      coder: Transaction.Coder.new(ByteString.new(), Proto.new(__MODULE__)),
+      projection: Projection.new(fn u -> {u.id, u} end)
     })
   end
 end

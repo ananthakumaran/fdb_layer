@@ -1,22 +1,10 @@
 defmodule FDBLayer.Index.Aggregate do
   alias FDB.Transaction
-  alias FDBLayer.KeyExpression
 
-  @enforce_keys [:name, :path, :type]
-  defstruct [:name, :path, :group_expression, :value_expression, :type, :coder]
+  @enforce_keys [:name, :coder, :path, :projection, :type]
+  defstruct [:name, :coder, :path, :projection, :type]
 
   def new(opts) do
-    opts =
-      Map.update(opts, :value_expression, KeyExpression.empty(), & &1)
-      |> Map.update(:group_expression, KeyExpression.empty(), & &1)
-
-    opts =
-      Map.put(
-        opts,
-        :coder,
-        FDB.Transaction.Coder.new(opts.group_expression.coder, opts.type.coder())
-      )
-
     struct!(__MODULE__, opts)
   end
 
@@ -32,7 +20,7 @@ end
 
 defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
   alias FDB.Transaction
-  alias FDBLayer.KeyExpression
+  alias FDBLayer.Projection
 
   def init(index, transaction, root_directory) do
     directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
@@ -41,38 +29,33 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
   end
 
   def create(index, transaction, new_record) do
-    id = KeyExpression.fetch(index.group_expression, new_record)
-    value = KeyExpression.fetch(index.value_expression, new_record)
+    [{key, value}] = Projection.apply(index.projection, new_record)
 
     index.type.create(value)
-    |> atomic(index, transaction, id)
+    |> atomic(index, transaction, key)
   end
 
   def update(index, transaction, old_record, new_record) do
-    new_id = KeyExpression.fetch(index.group_expression, new_record)
-    old_id = KeyExpression.fetch(index.group_expression, old_record)
+    [{new_key, new_value}] = Projection.apply(index.projection, new_record)
+    [{old_key, old_value}] = Projection.apply(index.projection, old_record)
 
-    new_value = KeyExpression.fetch(index.value_expression, new_record)
-    old_value = KeyExpression.fetch(index.value_expression, old_record)
-
-    if new_id == old_id do
+    if new_key == old_key do
       index.type.update(old_value, new_value)
-      |> atomic(index, transaction, new_id)
+      |> atomic(index, transaction, new_key)
     else
       index.type.delete(old_value)
-      |> atomic(index, transaction, old_id)
+      |> atomic(index, transaction, old_key)
 
       index.type.create(new_value)
-      |> atomic(index, transaction, new_id)
+      |> atomic(index, transaction, new_key)
     end
   end
 
   def delete(index, transaction, current_record) do
-    id = KeyExpression.fetch(index.group_expression, current_record)
-    value = KeyExpression.fetch(index.value_expression, current_record)
+    [{key, value}] = Projection.apply(index.projection, current_record)
 
     index.type.delete(value)
-    |> atomic(index, transaction, id)
+    |> atomic(index, transaction, key)
   end
 
   def scan(index, database_or_transaction, key_selector_range) do

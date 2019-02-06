@@ -1,19 +1,9 @@
 defmodule FDBLayer.Repo do
-  alias FDBLayer.KeyExpression
-  alias FDBLayer.Index
   alias FDBLayer.Index.Primary
+  alias FDBLayer.Index
+  alias FDBLayer.Projection
 
   def create(transaction, record, value) do
-    id = KeyExpression.fetch(record.primary_index.key_expression, value)
-    current = Primary.fetch_one(record.primary_index, transaction, id)
-
-    if current do
-      raise FDBLayer.DuplicateRecordError, """
-      A record with primary key `#{id}` already exists.
-      Existing Record: #{inspect(current)}
-      """
-    end
-
     Enum.each([record.primary_index] ++ record.indices, &Index.create(&1, transaction, value))
   end
 
@@ -27,12 +17,12 @@ defmodule FDBLayer.Repo do
   end
 
   def update(transaction, record, value) do
-    id = KeyExpression.fetch(record.primary_index.key_expression, value)
-    current = Primary.fetch_one(record.primary_index, transaction, id)
+    key = Projection.key(record.primary_index.projection, value)
+    current = Primary.fetch_one(record.primary_index, transaction, key)
 
     unless current do
       raise FDBLayer.RecordNotFoundError, """
-      A record with primary key `#{id}` does not exist.
+      A record with primary key `#{key}` does not exist.
       """
     end
 
@@ -43,8 +33,8 @@ defmodule FDBLayer.Repo do
   end
 
   def delete(transaction, record, value) do
-    id = KeyExpression.fetch(record.primary_index.key_expression, value)
-    current = Primary.fetch_one(record.primary_index, transaction, id)
+    key = Projection.key(record.primary_index.projection, value)
+    current = Primary.fetch_one(record.primary_index, transaction, key)
 
     if current do
       Enum.each([record.primary_index] ++ record.indices, &Index.delete(&1, transaction, current))

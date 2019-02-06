@@ -3,10 +3,6 @@ defmodule FDBLayer.Index.Aggregate.Sum do
     0
   end
 
-  def coder() do
-    FDB.Coder.SignedLittleEndianInteger.new()
-  end
-
   def create(value) do
     {FDB.Option.mutation_type_add(), value}
   end

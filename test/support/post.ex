@@ -1,8 +1,9 @@
 defmodule Sample.Post do
   use FDBLayer.Record
-  alias FDBLayer.{KeyExpression, Index}
-  alias FDB.Coder.ByteString
+  alias FDBLayer.{Projection, Index}
+  alias FDB.Coder.{ByteString, Tuple, LittleEndianInteger, SignedLittleEndianInteger}
   alias FDBLayer.Coder.Proto
+  alias FDB.Transaction
   use Protobuf, from: Path.join(__DIR__, "blog.proto"), only: [:Post], inject: true
 
   @impl true
@@ -10,8 +11,8 @@ defmodule Sample.Post do
     Index.Primary.new(%{
       path: ["record", "posts"],
       name: "posts",
-      key_expression: KeyExpression.field(:id, %{coder: ByteString.new()}),
-      value_coder: Proto.new(__MODULE__)
+      coder: Transaction.Coder.new(ByteString.new(), Proto.new(__MODULE__)),
+      projection: Projection.new(fn p -> {p.id, p} end)
     })
   end
 
@@ -21,29 +22,30 @@ defmodule Sample.Post do
       Index.Value.new(%{
         name: "users_posts",
         path: ["index", "users", "post_id"],
-        key_expression:
-          KeyExpression.concat(
-            KeyExpression.field(:user_id, %{coder: ByteString.new()}),
-            KeyExpression.field(:id, %{coder: ByteString.new()})
-          )
+        coder:
+          Transaction.Coder.new(Tuple.new({ByteString.new(), ByteString.new()}), ByteString.new()),
+        projection: Projection.new(fn p -> {{p.user_id, p.id}, ""} end)
       }),
       Index.Aggregate.new(%{
         name: "posts_count",
         path: ["index", "posts", "count"],
-        type: Index.Aggregate.Count
+        coder: Transaction.Coder.new(ByteString.new(), LittleEndianInteger.new()),
+        type: Index.Aggregate.Count,
+        projection: Projection.new(fn _p -> {"", 1} end)
       }),
       Index.Aggregate.new(%{
         name: "users_posts_count",
         path: ["index", "users", "posts_count"],
+        coder: Transaction.Coder.new(ByteString.new(), LittleEndianInteger.new()),
         type: Index.Aggregate.Count,
-        group_expression: KeyExpression.field(:user_id, %{coder: ByteString.new()})
+        projection: Projection.new(fn p -> {p.user_id, 1} end)
       }),
       Index.Aggregate.new(%{
         name: "users_claps_sum",
         path: ["index", "users", "claps_sum"],
         type: Index.Aggregate.Sum,
-        group_expression: KeyExpression.field(:user_id, %{coder: ByteString.new()}),
-        value_expression: KeyExpression.field(:claps)
+        coder: Transaction.Coder.new(ByteString.new(), SignedLittleEndianInteger.new()),
+        projection: Projection.new(fn p -> {p.user_id, p.claps} end)
       })
     ]
   end
