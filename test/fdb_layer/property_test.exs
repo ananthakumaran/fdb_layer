@@ -60,6 +60,7 @@ defmodule FDBLayer.PropertyTest do
   def verify_value_index(db, store) do
     actual =
       Index.scan(Store.index(store, Post, "users_posts"), db, KeySelectorRange.starts_with({}))
+      |> Stream.map(fn {key, ""} -> key end)
       |> Enum.to_list()
 
     expected =

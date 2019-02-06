@@ -38,6 +38,7 @@ defmodule FDBLayer.RecordTest do
 
     posts =
       Index.scan(Store.index(store, Post, "users_posts"), db, KeySelectorRange.starts_with({"9"}))
+      |> Stream.map(fn {key, ""} -> key end)
       |> Enum.to_list()
 
     assert posts == [{"9", "5678"}, {"9", "5679"}]

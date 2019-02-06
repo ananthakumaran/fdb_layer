@@ -84,12 +84,14 @@ defmodule FDBLayer.StoreTest do
 
     posts =
       Index.scan(Store.index(user_1, Post, "users_posts"), db, KeySelectorRange.starts_with({}))
+      |> Stream.map(fn {key, ""} -> key end)
       |> Enum.to_list()
 
     assert posts == [{"1", "1234"}]
 
     posts =
       Index.scan(Store.index(user_2, Post, "users_posts"), db, KeySelectorRange.starts_with({}))
+      |> Stream.map(fn {key, ""} -> key end)
       |> Enum.to_list()
 
     assert posts == [{"2", "5678"}]
@@ -106,6 +108,7 @@ defmodule FDBLayer.StoreTest do
 
     posts =
       Index.scan(Store.index(user_2, Post, "users_posts"), db, KeySelectorRange.starts_with({}))
+      |> Stream.map(fn {key, ""} -> key end)
       |> Enum.to_list()
 
     assert posts == [{"2", "5678"}]
