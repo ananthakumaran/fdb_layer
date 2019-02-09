@@ -26,7 +26,7 @@ defmodule FDBLayer.MixProject do
     [
       {:fdb, path: "../fdb"},
       {:msgpax, "~> 2.0"},
-      {:exprotobuf, github: "bitwalker/exprotobuf"},
+      {:exprotobuf, path: "../exprotobuf"},
       {:benchee, "~> 0.13", only: :dev},
       {:stream_data, "~> 0.4", only: :test},
       {:jason, "~> 1.0", only: :dev}

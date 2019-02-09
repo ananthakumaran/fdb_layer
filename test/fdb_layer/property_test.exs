@@ -3,6 +3,7 @@ defmodule FDBLayer.PropertyTest do
   alias FDBLayer.Index
   alias FDB.Database
   alias Sample.Post
+  alias Sample.Comment
   alias FDB.KeySelectorRange
   alias FDBLayer.Store
   use ExUnitProperties
@@ -18,10 +19,31 @@ defmodule FDBLayer.PropertyTest do
               %Post{id: "post_#{i}", user_id: "user_#{Integer.mod(i, 10) + 1}"}
             end)
 
+  def gen_comments(post_id) do
+    list_of(
+      map({string(:ascii), integer(1..10)}, fn {content, user_id} ->
+        %Comment{content: content, user_id: "user_#{user_id}"}
+      end),
+      max_length: 5
+    )
+    |> map(fn comments ->
+      Enum.with_index(comments)
+      |> Enum.map(fn {c, i} -> %{c | id: "comment_#{post_id}_#{i}"} end)
+    end)
+  end
+
   def gen_record() do
-    map({member_of(@records), string(:ascii), integer(), integer(1..10)}, fn {record, content,
-                                                                              claps, user_id} ->
-      %{record | content: content, claps: claps, user_id: "user_#{user_id}"}
+    bind({member_of(@records), string(:ascii), integer(), integer(1..10)}, fn {record, content,
+                                                                               claps, user_id} ->
+      map(gen_comments(record.id), fn comments ->
+        %{
+          record
+          | content: content,
+            claps: claps,
+            user_id: "user_#{user_id}",
+            comments: comments
+        }
+      end)
     end)
   end
 
@@ -132,6 +154,26 @@ defmodule FDBLayer.PropertyTest do
     assert actual == expected
   end
 
+  def verify_user_comments_index(db, store) do
+    actual =
+      Index.scan(
+        Store.index(store, Post, "users_comments"),
+        db,
+        KeySelectorRange.starts_with(nil)
+      )
+      |> Enum.to_list()
+
+    expected =
+      Index.scan(Store.index(store, Post, "posts"), db, KeySelectorRange.starts_with(nil))
+      |> Enum.flat_map(fn {_id, record} ->
+        record.comments
+      end)
+      |> Enum.map(fn comment -> {{comment.user_id, comment.id}, comment} end)
+      |> Enum.sort()
+
+    assert actual == expected
+  end
+
   property "consistency" do
     db = TestUtils.new_database()
 
@@ -146,6 +188,7 @@ defmodule FDBLayer.PropertyTest do
       verify_global_count_index(db, store)
       verify_user_count_index(db, store)
       verify_user_claps_index(db, store)
+      verify_user_comments_index(db, store)
     end
   end
 end

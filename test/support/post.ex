@@ -46,6 +46,17 @@ defmodule Sample.Post do
         type: Index.Aggregate.Sum,
         coder: Transaction.Coder.new(ByteString.new(), SignedLittleEndianInteger.new()),
         projection: Projection.new(fn p -> {p.user_id, p.claps} end)
+      }),
+      Index.Value.new(%{
+        name: "users_comments",
+        path: ["index", "users", "comments"],
+        coder:
+          Transaction.Coder.new(
+            Tuple.new({ByteString.new(), ByteString.new()}),
+            Proto.new(Sample.Comment)
+          ),
+        projection:
+          Projection.new(fn p -> Enum.map(p.comments, fn c -> {{c.user_id, c.id}, c} end) end)
       })
     ]
   end
