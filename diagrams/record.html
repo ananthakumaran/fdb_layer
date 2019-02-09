@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="https://necolas.github.io/normalize.css/8.0.1/normalize.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/github.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/languages/elixir.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <style>
+      body {
+          font-size: 14px;
+          font-family: 'Roboto', sans-serif;
+      }
+      .shadow {
+          box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+      }
+      .hljs {
+          padding: 0 0 0 15px;
+      }
+
+      table {
+          border-spacing:0;
+          border-collapse: collapse;
+          background: #f8f8f8;
+      }
+
+      table tr pre {
+          margin: 0;
+          padding: 0;
+      }
+
+      .structure {
+          color: #888;
+          font-weight: 300;
+          text-transform: uppercase;
+      }
+
+      svg.arrow {
+          position: absolute;
+          top: 150px;
+          left: 436px;
+      }
+    </style>
+  </head>
+  <body>
+    <pre class="shadow" style="width: 295px; margin: 40px 0 0 40px; position: absolute"><code class="json">
+{
+  "id": "1",
+  "user_id": "1",
+  "title": "Record layer",
+  "content": "FoundationDB ...",
+  "comments": [
+    {
+      "id": "1",
+      "user_id": "2",
+      "content": "nice"
+    },
+    {
+      "id": "2",
+      "user_id": "3",
+      "content": "cool"
+    }
+  ]
+}
+      </code></pre>
+
+<svg class="arrow">
+  <path d="M20 24c0-1.7 1-2.3 2.5-1.3l13 8.6c1.4 1 1.4 2.4 0 3.4l-13 8.6c-1.4 1-2.5.4-2.5-1.3V24" fill="#EEE" fill-opacity="0.9999985772478792" transform="translate(-12.0002069100848295534 0.0000234754099928125) scale(0.9999992886239396)"></path>
+  <path d="M20 24c0-1.7 1-2.3 2.5-1.3l13 8.6c1.4 1 1.4 2.4 0 3.4l-13 8.6c-1.4 1-2.5.4-2.5-1.3V24" fill="#DDD" fill-opacity="0.9999985772478792" transform="translate(-0.0000569100848295534 0.0000234754099928125) scale(0.9999992886239396)"></path>
+  <path d="M20 24c0-1.7 1-2.3 2.5-1.3l13 8.6c1.4 1 1.4 2.4 0 3.4l-13 8.6c-1.4 1-2.5.4-2.5-1.3V24" fill="#CCC" fill-opacity="0.9999986395415592" transform="translate(12.066545385511994)"></path>
+</svg>
+
+    <div style="position: absolute;left: 600px; top: 30px">
+      <p>Primary Index <span class="structure">{prefix, post_id}, protobuf serialized</span></p>
+      <table class="shadow" >
+        <tr>
+          <td><pre><code class="elixir">{"\x01", "1"}</code></pre></td>
+          <td><pre><code class="elixir">"\x4b\x78\x71\x2b\x65.."</code></pre></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="position: absolute;left: 600px; top: 110px">
+      <p>User Post Index <span class="structure">{prefix, user_id, post_id}, empty</span></p>
+      <table class="shadow" >
+        <tr>
+          <td><pre><code class="elixir">{"\x02", "1", "1"}</code></pre></td>
+          <td><pre><code class="elixir">""</code></pre></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="position: absolute;left: 600px; top: 190px">
+      <p>Post Count Index <span class="structure">{prefix, empty}, count</span></p>
+      <table class="shadow" >
+        <tr>
+          <td><pre><code class="elixir">{"\x03", ""}</code></pre></td>
+          <td><pre><code class="elixir">1</code></pre></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="position: absolute;left: 600px; top: 275px">
+      <p>User Comment Index <span class="structure">{prefix, user_id, comment_id}, comment</span></p>
+      <table class="shadow" >
+        <tr>
+          <td><pre><code class="elixir">{"\x04", "2", "1"}</code></pre></td>
+          <td><pre><code class="elixir">"\xd7\xcf\xdf\xdd\x7c.."</code></pre></td>
+        </tr>
+        <tr>
+          <td><pre><code class="elixir">{"\x04", "3", "2"}</code></pre></td>
+          <td><pre><code class="elixir">"\xb7\xad\xff\xbc\x05.."</code></pre></td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
