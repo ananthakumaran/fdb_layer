@@ -158,7 +158,6 @@ defmodule FDBLayer.RecordTest do
         KeySelectorRange.starts_with({"1234"})
       )
       |> Enum.map(fn {{"1234", _version}, value} -> value end)
-      |> Enum.to_list()
 
     assert changes == [
              [ins: "hello"],
