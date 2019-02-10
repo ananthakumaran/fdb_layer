@@ -27,7 +27,7 @@ end)
 
 Record layer is essentially about projecting the same record in
 different format. A projection is called Index. There are different
-kind of Indexes.
+kind of indexes.
 
 #### Primary Index
 
@@ -49,3 +49,11 @@ that are derived from all records. The key can be empty, in which case
 it will act as a global aggregate or it can be composed of other
 fields, in which case it will act as a grouped aggregate. The mutations
 are performed using atomic operation to avoid conflicts.
+
+#### Version Index
+
+With other indexes the old data will get overwritten on
+update. Version index uses verstionstamp as part of the key, so each
+change to a record can be projected in some way. This could be used to
+build features like audit trails, versioned record history, change
+data capture etc.

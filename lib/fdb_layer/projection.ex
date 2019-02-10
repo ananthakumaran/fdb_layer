@@ -1,8 +1,9 @@
 defmodule FDBLayer.Projection do
-  defstruct [:fun]
+  defstruct [:fun, :arity]
 
   def new(fun) do
-    %__MODULE__{fun: fun}
+    {:arity, arity} = :erlang.fun_info(fun, :arity)
+    %__MODULE__{fun: fun, arity: arity}
   end
 
   def key(projection, value) do
@@ -10,8 +11,13 @@ defmodule FDBLayer.Projection do
     key
   end
 
-  def apply(%__MODULE__{fun: fun}, value) do
+  def apply(%__MODULE__{fun: fun, arity: 1}, value) do
     fun.(value)
+    |> normalize
+  end
+
+  def apply(%__MODULE__{fun: fun, arity: 2}, old, new) do
+    fun.(old, new)
     |> normalize
   end
 

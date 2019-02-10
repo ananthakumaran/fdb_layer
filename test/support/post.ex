@@ -1,8 +1,16 @@
 defmodule Sample.Post do
   use FDBLayer.Record
   alias FDBLayer.{Projection, Index}
-  alias FDB.Coder.{ByteString, Tuple, LittleEndianInteger, SignedLittleEndianInteger}
-  alias FDBLayer.Coder.Proto
+
+  alias FDB.Coder.{
+    ByteString,
+    Tuple,
+    LittleEndianInteger,
+    SignedLittleEndianInteger,
+    Versionstamp
+  }
+
+  alias FDBLayer.Coder.{Proto, Term}
   alias FDB.Transaction
   use Protobuf, from: Path.join(__DIR__, "blog.proto"), only: [:Post], inject: true
 
@@ -57,6 +65,34 @@ defmodule Sample.Post do
           ),
         projection:
           Projection.new(fn p -> Enum.map(p.comments, fn c -> {{c.user_id, c.id}, c} end) end)
+      }),
+      Index.Version.new(%{
+        name: "posts_changes",
+        path: ["index", "posts", "changes"],
+        coder:
+          Transaction.Coder.new(
+            Tuple.new({ByteString.new(), Versionstamp.new()}),
+            Term.new()
+          ),
+        projection:
+          Projection.new(fn old, new ->
+            prev =
+              if old do
+                old.content
+              else
+                ""
+              end
+
+            next =
+              if new do
+                new.content
+              else
+                ""
+              end
+
+            {{(old || new).id, FDB.Versionstamp.incomplete()},
+             String.myers_difference(prev, next)}
+          end)
       })
     ]
   end
