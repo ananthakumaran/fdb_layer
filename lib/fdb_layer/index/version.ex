@@ -10,6 +10,7 @@ end
 defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Version do
   alias FDB.Transaction
   alias FDBLayer.Projection
+  alias FDB.Future
 
   def init(index, transaction, root_directory) do
     directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
@@ -37,7 +38,7 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Version do
       :ok = Transaction.set_versionstamped_key(transaction, key, value, %{coder: index.coder})
     end)
 
-    :ok
+    Future.constant(:ok)
   end
 
   def scan(index, database_or_transaction, key_selector_range) do

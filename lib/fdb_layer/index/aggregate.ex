@@ -22,6 +22,7 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
   alias FDB.Transaction
   alias FDBLayer.Projection
   alias FDBLayer.Changeset
+  alias FDB.Future
 
   def init(index, transaction, root_directory) do
     directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
@@ -36,7 +37,7 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
       |> atomic(index, transaction, key)
     end)
 
-    :ok
+    Future.constant(:ok)
   end
 
   def update(index, transaction, old_record, new_record) do
@@ -58,6 +59,8 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
       index.type.delete(value)
       |> atomic(index, transaction, key)
     end)
+
+    Future.constant(:ok)
   end
 
   def delete(index, transaction, current_record) do
@@ -67,7 +70,7 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Aggregate do
       |> atomic(index, transaction, key)
     end)
 
-    :ok
+    Future.constant(:ok)
   end
 
   def scan(index, database_or_transaction, key_selector_range) do

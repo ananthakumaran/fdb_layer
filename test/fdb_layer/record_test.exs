@@ -50,7 +50,7 @@ defmodule FDBLayer.RecordTest do
 
     assert_raise FDBLayer.DuplicateRecordError, fn ->
       Database.transact(db, fn t ->
-        Repo.create(t, post_record, %Post{id: "1234"})
+        Repo.create(t, post_record, %Post{id: "1234", user_id: "9", claps: 0, content: "hello"})
       end)
     end
 

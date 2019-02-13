@@ -57,16 +57,19 @@ defmodule FDBLayer.PropertyTest do
 
   def apply_commands(db, store, commands) do
     for command <- commands do
-      Database.transact(db, fn t ->
-        apply_command(t, store, command)
-      end)
+      try do
+        Database.transact(db, fn t ->
+          apply_command(t, store, command)
+        end)
+      rescue
+        FDBLayer.RecordNotFoundError -> :ok
+        FDBLayer.DuplicateRecordError -> :ok
+      end
     end
   end
 
   def apply_command(transaction, store, {:create, record}) do
     Repo.create(transaction, Store.record(store, Post), record)
-  rescue
-    FDBLayer.DuplicateRecordError -> :ok
   end
 
   def apply_command(transaction, store, {:delete, record}) do
@@ -75,8 +78,6 @@ defmodule FDBLayer.PropertyTest do
 
   def apply_command(transaction, store, {:update, record}) do
     Repo.update(transaction, Store.record(store, Post), record)
-  rescue
-    FDBLayer.RecordNotFoundError -> :ok
   end
 
   def verify_value_index(db, store) do

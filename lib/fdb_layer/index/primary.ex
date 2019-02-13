@@ -21,6 +21,7 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Primary do
   alias FDB.Transaction
   alias FDBLayer.Projection
   alias FDBLayer.Index.Primary
+  alias FDB.Future
 
   def init(index, transaction, root_directory) do
     directory = FDB.Directory.create_or_open(root_directory, transaction, index.path)
@@ -30,26 +31,30 @@ defimpl FDBLayer.Index.Protocol, for: FDBLayer.Index.Primary do
 
   def create(index, transaction, new_record) do
     [{key, value}] = Projection.apply(index.projection, new_record)
-    current = Primary.fetch_one(index, transaction, key)
 
-    if current do
-      raise FDBLayer.DuplicateRecordError, """
-      A record with primary key `#{key}` already exists.
-      Existing Record: #{inspect(current)}
-      """
-    end
+    Primary.fetch_one_q(index, transaction, key)
+    |> Future.then(fn current ->
+      if current do
+        raise FDBLayer.DuplicateRecordError, """
+        A record with primary key `#{key}` already exists.
+        Existing Record: #{inspect(current)}
+        """
+      end
 
-    :ok = Transaction.set(transaction, key, value, %{coder: index.coder})
+      :ok = Transaction.set(transaction, key, value, %{coder: index.coder})
+    end)
   end
 
   def update(index, transaction, _old_record, new_record) do
     [{key, value}] = Projection.apply(index.projection, new_record)
     :ok = Transaction.set(transaction, key, value, %{coder: index.coder})
+    Future.constant(:ok)
   end
 
   def delete(index, transaction, current_record) do
     [{key, _}] = Projection.apply(index.projection, current_record)
     :ok = Transaction.clear(transaction, key, %{coder: index.coder})
+    Future.constant(:ok)
   end
 
   def scan(index, database_or_transaction, key_selector_range) do
