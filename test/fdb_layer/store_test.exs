@@ -27,7 +27,7 @@ defmodule FDBLayer.StoreTest do
                "blog" => %{
                  "record" => %{"posts" => %{}},
                  "index" => %{
-                   "posts" => %{"count" => %{}},
+                   "posts" => %{"count" => %{}, "changes" => %{}},
                    "users" => %{
                      "post_id" => %{},
                      "posts_count" => %{},
@@ -61,7 +61,7 @@ defmodule FDBLayer.StoreTest do
                  "1" => %{
                    "record" => %{"posts" => %{}},
                    "index" => %{
-                     "posts" => %{"count" => %{}},
+                     "posts" => %{"count" => %{}, "changes" => %{}},
                      "users" => %{
                        "post_id" => %{},
                        "posts_count" => %{},
@@ -73,7 +73,7 @@ defmodule FDBLayer.StoreTest do
                  "2" => %{
                    "record" => %{"posts" => %{}},
                    "index" => %{
-                     "posts" => %{"count" => %{}},
+                     "posts" => %{"count" => %{}, "changes" => %{}},
                      "users" => %{
                        "post_id" => %{},
                        "posts_count" => %{},
@@ -91,10 +91,16 @@ defmodule FDBLayer.StoreTest do
         id: "1234",
         title: "hello",
         user_id: "1",
+        content: "hello",
         claps: 0
       })
 
-      Repo.create(t, Store.record(user_2, Post), %Post{id: "5678", user_id: "2", claps: 0})
+      Repo.create(t, Store.record(user_2, Post), %Post{
+        id: "5678",
+        user_id: "2",
+        content: "hello",
+        claps: 0
+      })
     end)
 
     posts =
@@ -133,7 +139,7 @@ defmodule FDBLayer.StoreTest do
                "user" => %{
                  "2" => %{
                    "index" => %{
-                     "posts" => %{"count" => %{}},
+                     "posts" => %{"count" => %{}, "changes" => %{}},
                      "users" => %{
                        "post_id" => %{},
                        "posts_count" => %{},

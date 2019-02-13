@@ -30,6 +30,7 @@ defmodule FDBLayer.StreamTest do
             id: "post_#{i}",
             title: "hello",
             user_id: "user_#{i}",
+            content: "hello",
             claps: 0
           })
         end)
