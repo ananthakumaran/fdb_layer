@@ -108,16 +108,16 @@ defmodule FDBLayer.RecordTest do
     end)
 
     Database.transact(db, fn t ->
-      Repo.create(t, user_record, %User{id: "1", name: "john"})
-      Repo.create(t, user_record, %User{id: "2", name: "wick"})
+      Repo.create(t, user_record, %{id: "1", name: "john"})
+      Repo.create(t, user_record, %{id: "2", name: "wick"})
     end)
 
     Database.transact(db, fn t ->
       user = Repo.get(t, user_record, "1")
-      assert user.name == "john"
+      assert Map.get(user, "name") == "john"
 
       user = Repo.get(t, user_record, "2")
-      assert user.name == "wick"
+      assert Map.get(user, "name") == "wick"
     end)
   end
 
