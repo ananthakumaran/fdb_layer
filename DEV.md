@@ -6,6 +6,8 @@ Datastore](https://www.foundationdb.org/files/record-layer-paper.pdf)
 [F1: A Distributed SQL Database That
 Scales](https://ai.google/research/pubs/pub41344.pdf)
 
+[Online, Asynchronous Schema Change in F1](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41376.pdf)
+
 [How to Architect a Query
 Compiler](https://15721.courses.cs.cmu.edu/spring2018/papers/03-compilation/shaikhha-sigmod2016.pdf)
 
