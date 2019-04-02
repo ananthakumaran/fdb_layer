@@ -27,7 +27,7 @@ defmodule FDBLayer.MixProject do
       {:fdb, path: "../fdb"},
       {:msgpax, "~> 2.0"},
       {:exprotobuf, path: "../exprotobuf"},
-      {:erlavro, path: "../erlavro"},
+      {:erlavro, github: "klarna/erlavro"},
       {:jason, "~> 1.0"},
       {:benchee, "~> 0.13", only: :dev},
       {:stream_data, "~> 0.4", only: :test}
